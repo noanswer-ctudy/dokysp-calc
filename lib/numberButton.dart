@@ -10,9 +10,9 @@ class NumberButton extends StatelessWidget {
   Function _callback;
 
   NumberButton({
-    double width = 90,
-    double height = 90,
-    double fontsize = 40,
+    double width = 80,
+    double height = 80,
+    double fontsize = 35,
     String label = "",
     Color color = const Color.fromRGBO(60, 60, 60, 1),
     Color fontcolor = CupertinoColors.white,

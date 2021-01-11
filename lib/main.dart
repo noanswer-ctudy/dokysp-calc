@@ -12,7 +12,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  double _padding = 5;
+  double _padding = 12;
 
   String display = "0";
   double rOperand = 0;
@@ -20,37 +20,42 @@ class _MyAppState extends State<MyApp> {
   SIG operation;
 
   bool isOperation = false;
+  bool isResult = false;
 
   double fontSize = 100;
 
   Color highLighter = Color.fromRGBO(255, 200, 100, 1);
 
-  void changeFontSize() {
-    if (display.length == 6) {
-      fontSize = 83;
-    } else if (display.length == 7) {
-      fontSize = 70;
-    } else if (display.length >= 8) {
-      fontSize = 45;
-    } else {
-      fontSize = 100;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    // TODO: 세자리마다 콤마 찍어주는 함수 만들기
+
+    void changeFontSize() {
+      if (display.length == 6) {
+        fontSize = 83;
+      } else if (display.length == 7) {
+        fontSize = 70;
+      } else if (display.length >= 8) {
+        fontSize = 45;
+      } else {
+        fontSize = 100;
+      }
+    }
+
+    //
     void controller({int num, SIG sig}) {
-      // print(num.toString() + "/" + sig.toString());
       if (num != null && sig == null) {
         // NUMBER
 
-        // 연산자 눌려있을 때 처리
-        if (isOperation) {
+        // 연산자 눌려있을 때 || 결과값이 나왔을 때 처리
+        if (isOperation || isResult) {
           isOperation = false;
+          isResult = false;
           display = "";
         }
 
         // 11자리까지만 입력 가능
+        // TODO: 11자리 넘었을 때, 계산 씹는 코드 필요
         if (display.length != 12) {
           if (display == "0") {
             display = num.toString();
@@ -68,37 +73,64 @@ class _MyAppState extends State<MyApp> {
             sig == SIG.MUL ||
             sig == SIG.DIV) {
           lOperand = double.parse(display);
+
           operation = sig;
 
           isOperation = true;
         }
 
-        if (sig == SIG.IS) {
-          isOperation = false;
-          rOperand = double.parse(display);
+        double result;
 
-          // TODO: =을 연속해서 눌렀을 때, lOperand = rOperand; 이것 때문에 이상한 결과가 나옴.
+        if (sig == SIG.IS && display != "∞") {
+          isOperation = false;
+
+          // = 을 연속해서 눌렀을 때, lOperand = rOperand; 이것 때문에 이상한 결과가 나옴.
+          //  => 해결
+          if (isResult == false)
+            rOperand = double.parse(display);
+          else {
+            lOperand = double.parse(display);
+          }
+          print(lOperand.toString() + " / " + rOperand.toString());
+
           switch (operation) {
             case SIG.ADD:
-              display = (lOperand + rOperand).toString();
+              result = (lOperand + rOperand);
               break;
             case SIG.SUB:
-              display = (lOperand - rOperand).toString();
+              result = (lOperand - rOperand);
               break;
             case SIG.MUL:
-              display = (lOperand * rOperand).toString();
+              result = (lOperand * rOperand);
               break;
             case SIG.DIV:
-              display = (lOperand / rOperand).toString();
+              if (rOperand == 0) {
+                display = "∞";
+              } else {
+                result = (lOperand / rOperand);
+              }
               break;
             default:
+              result = 0.0;
           }
-          lOperand = rOperand;
+
+          // 결과값이 정수일 때, 소숫점을 없앰
+          if (result != null) {
+            if (result - result.toInt() == 0)
+              display = result.toInt().toString();
+            else
+              display = result.toString();
+          }
+          isResult = true;
         }
 
         if (sig == SIG.CLR) {
           display = "0";
           operation = null;
+          isOperation = false;
+          isResult = false;
+          lOperand = 0.0;
+          rOperand = 0.0;
         }
 
         if (sig == SIG.PAM) {
@@ -111,10 +143,16 @@ class _MyAppState extends State<MyApp> {
           }
         }
 
-        // TODO: 구현하기
-        if (sig == SIG.DAH) {}
+        // % 버튼 (0일 경우 무시)
+        if (sig == SIG.DAH && display != "0") {
+          display = (double.parse(display) * 0.01).toString();
+        }
 
-        if (sig == SIG.DOT) {}
+        // 점 (이미 .이 있는 경우 무시)
+        if (sig == SIG.DOT && display[display.length - 1] != ".") {
+          display += ".";
+          // double.parse(2.) => 2.0 으로 알아서 바꿈
+        }
         //
 
       }
@@ -132,7 +170,7 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             children: [
               SizedBox(
-                height: 200,
+                height: 180,
               ),
               Container(
                 height: 140,
@@ -149,6 +187,7 @@ class _MyAppState extends State<MyApp> {
               ),
 
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
                     width: _padding,
@@ -201,6 +240,7 @@ class _MyAppState extends State<MyApp> {
               ///
 
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
                     width: _padding,
@@ -248,6 +288,7 @@ class _MyAppState extends State<MyApp> {
               ///
 
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
                     width: _padding,
@@ -293,6 +334,7 @@ class _MyAppState extends State<MyApp> {
               ///
 
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
                     width: _padding,
@@ -338,13 +380,14 @@ class _MyAppState extends State<MyApp> {
               ///
 
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
                     width: _padding,
                   ),
                   NumberButton(
                     label: "0         ",
-                    width: 190,
+                    width: 172,
                     callback: () => controller(num: 0),
                   ),
                   SizedBox(
